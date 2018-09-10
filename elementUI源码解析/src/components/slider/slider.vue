@@ -94,9 +94,9 @@ export default {
 
         getDistance(position) {
             if(this.vertical) {
-                this.oldValue = ((position - parseFloat(this.getStyle(this.$el, 'top'))) / parseFloat(this.getStyle(this.$el, 'height')) * 100);
+                this.oldValue = ((position - parseFloat(this.$el.getBoundingClientRect().top)) / parseFloat(this.getStyle(this.$el, 'height')) * 100);
             } else {
-                this.oldValue = ((position - parseFloat(this.getStyle(this.$el, 'left'))) / parseFloat(this.getStyle(this.$el, 'width')) * 100);
+                this.oldValue = ((position - parseFloat(this.$el.getBoundingClientRect().left)) / parseFloat(this.getStyle(this.$el, 'width')) * 100);
             }
         },
 
