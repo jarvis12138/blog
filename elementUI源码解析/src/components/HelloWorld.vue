@@ -4,6 +4,14 @@
     <Slider>
       <!-- <span slot="sliderButton">自己定制</span> -->
     </Slider>
+
+    <div style="padding: 60px 0;">
+      <button @click="dialog = true;">new dialog</button>
+      <!-- .sync 修饰符 (vue) -->
+      <Dialogs :visible.sync="dialog">
+
+      </Dialogs>
+    </div>
   </div>
 </template>
 
@@ -12,6 +20,7 @@ export default {
   name: 'HelloWorld',
   data () {
     return {
+      dialog: false,
       msg: 'Welcome to Your Vue.js App'
     }
   }
