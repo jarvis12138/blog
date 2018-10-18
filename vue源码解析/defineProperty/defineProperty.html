@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>defineProperty</title>
+</head>
+<body>
+	
+<script>
+
+// Object.defineProperty 监听对象的改变
+var a = {"b": 1};
+Object.defineProperty(a, "b", {
+	enumerable: true,
+	configurable: true,
+	get: function() {
+		console.log("访问a.b");
+	},
+	set: function(newValue) {
+		console.log("a.b被修改,b=" + newValue);
+	}
+});
+a.b; // 访问a.b
+a.b = 2; // a.b被修改,b=2
+
+
+
+// Object.defineProperty 对数组监听
+var arr = {};
+Object.defineProperty(arr, "b", {
+	set: function(newValue) {
+		console.log("新值：" + newValue);
+	},
+	get: function() {
+		console.log("值被访问");
+	}
+});
+// 在arr.b未被定义的情况下仍然可以监听arr.b的值
+arr.b; // 值被访问
+arr.b = []; // 新值：
+arr.b = [1,2,3]; // 新值：1,2,3
+// arr.b[1] = 5; // 报错
+// arr.b.push(6); // 报错
+// arr.b.length; // 报错
+// 
+// 可以看出当arr.b赋值为数组后,并不能对数组进行操作
+
+
+
+
+// 对数组变化的监听
+var arrayPush = {};
+(function(method) {
+	var original = Array.prototype[method];
+	arrayPush[method] = function() {
+		// console.log(this);
+		return original.apply(this, arguments);
+	};
+})("push");
+var testPush = [];
+testPush.__proto__ = arrayPush;
+testPush.push(1); // [1]
+// testPush.push(2); // [1,2]
+
+
+</script>
+
+</body>
+</html>
