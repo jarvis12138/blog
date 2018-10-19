@@ -23,11 +23,33 @@ function compile(el) {
     var fragment = document.createDocumentFragment();
     // 循环获取ele下第一个元素
     var child = null;
-    while(child = fragment.firstChild) {
+    while(child = ele.firstChild) {
         fragment.appendChild(child);
     };
+    replace(fragment);
 
     ele.appendChild(fragment);
+}
+function replace(fragment) {
+    Array.from(fragment.childNodes).forEach(function(node) {
+        // 元素节点
+        if(node.nodeType === 1) {
+            // 获取元素节点上的所有属性
+            Array.from(node.attributes).forEach(function (attr) {
+                console.log(attr);
+            });
+        }
+        // 文本节点 {{name}} - {{msg}}
+        var reg = /\{\{([^}]*)\}\}/g;
+        var text = node.textContent;
+        if(node.nodeType === 3 && reg.test(text)) {
+            console.log(node);
+        }
+
+        if(node.childNodes.length) {
+            replace(node);
+        }
+    });
 }
 
 compile("#app");
