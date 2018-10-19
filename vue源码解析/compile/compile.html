@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app">
+        <input type="text" v-model="name" />
+        <input type="text" v-model="msg" />
+        {{msg}} - {{name}}
+        <div>test</div>
+        <div>{{name}}</div>
+    </div>
+
+<script>
+// 将数据和节点挂载一起
+function compile(el) {
+    var ele = document.querySelector(el);
+    // 创建文档碎片
+    var fragment = document.createDocumentFragment();
+    // 循环获取ele下第一个元素
+    var child = null;
+    while(child = fragment.firstChild) {
+        fragment.appendChild(child);
+    };
+
+    ele.appendChild(fragment);
+}
+
+compile("#app");
+</script>
+
+</body>
+</html>
