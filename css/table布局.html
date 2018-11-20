@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>table布局</title>
+</head>
+<body>
+    <div class="table">
+        <div class="table-row">
+            <div class="table-cell">111111111111111111111111</div>
+            <div class="table-cell">2222222222222<br>333333333</div>
+            <div class="table-cell">44444444444</div>
+        </div>
+    </div>
+
+    <style>
+        .table {
+            display: table;
+            width: 100%;
+            table-layout: fixed;   /* 表格布局算法 列宽由表格宽度和列宽度设定 */
+            border-collapse: separate; /* 为表格设置合并边框模型 边框会被分开 */
+        }
+        .table-row {
+            display: table-row;
+        }
+        .table-cell {
+            display: table-cell;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+    </style>
+</body>
+</html>
