@@ -37,3 +37,26 @@ if (/^[\],:{}\s]*$/
 ![parse](https://github.com/jarvis12138/blog/blob/master/question/image/regexp2.png?raw=true)
 
 ![parse](https://github.com/jarvis12138/blog/blob/master/question/image/regexp3.png?raw=true)
+
+### 函数柯里化
+
+```javascript
+function add () {
+    var args = Array.prototype.slice.call(arguments);
+
+    var fn = function () {
+        var arg_fn = Array.prototype.slice.call(arguments);
+        return add.apply(null, args.concat(arg_fn));
+    };
+
+    fn.valueOf = function () {
+        return args.reduce(function (a, b) {
+            return a + b;
+        });
+    };
+
+    return fn;
+}
+
+add(1,2,3);   // 6
+```
