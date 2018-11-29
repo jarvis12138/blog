@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+
+        #box {
+            position: relative;
+            width: 800px;
+            height: 500px; /*50px上部 + 40px每行*10行 + 50px 下部*/
+            border: 1px solid #333;
+        }
+
+        /* 开始线 */
+        .line {
+            position: absolute;
+            top: 50px;
+            bottom: 50px;
+            left: 98px;
+            width: 2px;
+            background-color: #000;
+        }
+
+        /* 单行容器，包含【名字】【数字】【显示的数据】*/
+        .row {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            line-height: 40px;
+            transition: top 0.5s;
+        }
+
+        /* 名字 */
+        .name {
+            position: absolute;
+            left: 0;
+            width: 90px;
+            text-align: right;
+        }
+
+        .data-item {
+            position: absolute;
+            top: 10px;
+            left: 100px;
+            right: 0;
+            height: 20px;
+        }
+
+        .item {
+            vertical-align: top;
+            display: inline-block;
+            float: left;
+            width: 30px;
+            height: 20px;
+            background-color: red;
+            transition: width 2s;
+        }
+
+        .count {
+            vertical-align: top;
+            display: inline-block;
+            float: left;
+            margin-left: 20px;
+            height: 20px;
+            line-height: 20px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <div id="box">
+        <!-- 参考线 -->
+        <div class="line"></div>
+
+        <!-- 一行 -->
+        <!--<div class="row">-->
+        <!--<div class="name">第一行</div>-->
+        <!--&lt;!&ndash; 横条 + 数据 &ndash;&gt;-->
+        <!--<div class="data-item">-->
+        <!--<div class="item"></div>-->
+        <!--<div class="count">123</div>-->
+        <!--</div>-->
+        <!--</div>-->
+    </div>
+</div>
+<script>
+  // 生成数据
+  const makeData = () => {
+    const data = [];
+    // 10轮数据变换
+    for (let i = 0; i < 10; i++) {
+      const one = [];
+      // 每轮10组数据
+      for (let j = 0; j < 10; j++) {
+        const item = {
+          name: `第 ${j} 号`,
+          count: parseInt(Math.random() * 1000),
+        };
+        one.push(item);
+      }
+      data.push(one);
+    }
+    return data;
+  };
+
+
+  class MyAnimation {
+    constructor() {
+      this.data;
+      this._showOne;// 当前显示的那一行
+      this._MaxWidth = 500;     // 最大宽度 500px
+    }
+
+
+    // 将动画数据添加进去
+    bindData(data) {
+      // 是数组
+      if (data instanceof Array) {
+        this.data = data;
+      } else {
+        console.error(data, 'is not Array');
+        return false;
+      }
+    }
+
+    // 开始动画
+    action() {
+      if (!this.data) {
+        return;
+      }
+      // 动画是分周期的，每一次数据变换是一次动画过程，多次数据变换就是连续的动画
+      this.data.forEach((item, index) => {
+        setTimeout(() => {
+          this._actionOneTurn(item, index);
+        }, index * 2000);
+      });
+    }
+
+    // 单次动画
+    _actionOneTurn(one, index) {
+      // 如果是第一组数据，需要初始化显示
+      if (index === 0) {
+        this._actionOneTurnByCreate(one);
+      } else {
+        this._actionOneTurnByMove(one);
+      }
+    }
+
+    // 单次动画之首次创建
+    _actionOneTurnByCreate(one) {
+      console.log('first');
+      // 排序
+      one.sort((last, next) => next.count - last.count);
+
+      // 首先确认最大的是多少
+      let max = one[0].count;
+
+      // 然后排序
+
+      // 根据最大的开始设计每个的宽度
+      this._showOne = [];
+      one.forEach((item, index) => {
+        // 生成DOM
+        const ele = document.createElement('div');
+        ele.classList.add('row');
+        ele.style.top = `${index * 40 + 50}px`;
+
+        const nameEle = document.createElement('div');
+        nameEle.classList.add('name');
+        nameEle.textContent = item.name;
+        ele.append(nameEle);
+
+        const dataItemEle = document.createElement('div');
+        dataItemEle.classList.add('data-item');
+
+        const itemEle = document.createElement('div');
+        itemEle.classList.add('item');
+        // debugger;
+        itemEle.style.width = `${item.count / max * this._MaxWidth}px`;
+        dataItemEle.append(itemEle);
+
+        const countEle = document.createElement('div');
+        countEle.classList.add('count');
+        countEle.textContent = item.count;
+        dataItemEle.append(countEle);
+        ele.append(dataItemEle);
+
+        this._showOne.push({
+          item: item,
+          ele: {
+            row: ele,
+            itemEle: itemEle,
+            countEle: countEle,
+          }
+        });
+        document.getElementById("box").append(ele);
+      });
+    }
+
+    // 单次动画之动起来
+    _actionOneTurnByMove(one) {
+      // 要做两件事情
+      // 第一，新的排序，定每个DOM所在的位置
+      // 第二，定每个DOM数据条的宽度
+
+      // 排序
+      one.sort((last, next) => next.count - last.count);
+
+      let max = one[0].count;
+      one.forEach((oneItem, index) => {
+        // 先找到对应的那个 DOM 元素
+        this._showOne.forEach(item => {
+          if (item.item.name === oneItem.name) {
+            item.item.count = oneItem.count;
+
+            // 修改这个 DOM 元素的 top 属性 和 数据条属性
+            const ele = item.ele;
+            // 修改 top 属性
+            ele.row.style.top = `${index * 40 + 50}px`;
+            ele.itemEle.style.width = `${item.item.count / max * this._MaxWidth}px`;
+            ele.countEle.textContent = item.item.count;
+          }
+        });
+      });
+    }
+  }
+
+  const My = new MyAnimation();
+  const list = makeData();
+  console.log("list", list);
+  // 绑定数据
+  My.bindData(list);
+  // 开始动画
+  My.action();
+
+</script>
+</body>
+</html>
