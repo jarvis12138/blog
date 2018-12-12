@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>storage</title>
+</head>
+<body>
+
+<script>
+
+
+lStorage = {
+	// 格式：info = {address: {first: 'zhangsan'}}
+
+	// info: info
+	// type: 数据格式
+	// 示例：获取info中的first：lStorage.get('info', 'json', 'address.first')
+	// 设置localStorage：lStorage.set('info', info, 'json')
+	get: function (name, type, param) {
+		if (typeof name !== 'string') {
+			console.error('please enter a parameter and it is a string');
+			return false;
+		}
+		if (type === 'json' && param === undefined || type === 'json' && typeof param !== 'string') {
+			console.error('please enter a parameter and it is a string');
+			return false;
+		}
+		if (type !== 'json' && type !== 'string') {
+			type = 'string';
+		}
+		if (type === 'string') {
+			return localStorage.getItem(name);
+		} else if (type === 'json') {
+			try {
+				let paramArray = param.split('.');
+				let index = -1;
+				let object = JSON.parse(localStorage.getItem(name));
+				if (paramArray.length === 1 && paramArray[0] === '') {
+					return object;
+				} else {
+					while (++index < paramArray.length) {
+						object = object[paramArray[index]];
+					}
+					return object;
+				}
+			} catch (e) {
+				return undefined;
+			}
+		}
+	},
+	set: function (name, value, type) {
+	// set: function () {
+	// 	let args = Array.prototype.slice.call(arguments);
+	// 	let name = args[0];
+	// 	let value = args[1];
+	// 	let type = args[2];
+		if (typeof name !== 'string') {
+			console.error('please enter a parameter and it is a string');
+			return false;
+		}
+		if (type !== 'json' && type !== 'string') {
+			type = 'string';
+		}
+		if (type === 'string') {
+			localStorage.setItem(name, value);
+		} else if (type === 'json') {
+				localStorage.setItem(name, JSON.stringify(value));
+		}
+	}
+};
+
+
+
+</script>
+    
+</body>
+</html>
