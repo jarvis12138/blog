@@ -132,3 +132,13 @@ html{font-size:10px}
 
 // 参考地址： https://www.cnblogs.com/well-nice/p/5509589.html https://www.cnblogs.com/webBlog-gqs/p/9139241.html
 ```
+
+### var、let、const
+
+```
+var: 函数作用域、变量提升
+let: 块级作用域、不存在变量提升
+const: 一旦声明不能修改，而且必须立即初始化。块级作用域、不存在变量提升、对复合类型的数据只能保证指针是固定的
+
+参考：阮一峰 ECMAScript 6 入门 http://es6.ruanyifeng.com/#docs/let
+```
