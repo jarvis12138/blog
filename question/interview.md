@@ -142,3 +142,12 @@ const: 一旦声明不能修改，而且必须立即初始化。块级作用域�
 
 参考：阮一峰 ECMAScript 6 入门 http://es6.ruanyifeng.com/#docs/let
 ```
+
+### 获取浏览器可视区宽度
+
+```javascript
+var htmlWidth = Math.max(document.documentElement.clientWidth, document.body.clientWidth);
+// 获取的是整个浏览器的可视区
+// 如果有滚动条，则宽度减去17px
+// IE8及其以下老版本会少3px
+```
