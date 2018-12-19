@@ -1,0 +1,22 @@
+{
+  "name": "demo02",
+  "version": "1.0.0",
+  "description": "> 初始化： `npm init -y`\r >\r > 安装webpack配置： `cnpm install webpack webpack-cli -D` \r >\r > 创建 `a.js` 、 `index.js` \r >\r > 运行： `npx webpack` (生成 `dist/main.js` )",
+  "main": "webpack.config.js",
+  "dependencies": {},
+  "devDependencies": {
+    "clean-webpack-plugin": "^1.0.0",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "start": "webpack-dev-server"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
