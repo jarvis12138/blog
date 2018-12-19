@@ -6,9 +6,13 @@ let HtmlWebpackPlugin = require('html-webpack-plugin');
 let CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
-    entry: './src/index.js',   // 入口
+    // entry: ['./src/index.js', './src/a.js'],   // 多个js文件打包成一个js
+    entry: {   // 多个js文件打包成多个js
+        index: './src/index.js',
+        a: './src/a.js'
+    },
     output: {
-        filename: 'build.[hash:8].js',
+        filename: '[name].[hash:8].js',   // [name]: 多个js文件打包成多个js
         // 路径必须是绝对路径
         path: path.resolve('./build')
     },  // 出口
@@ -25,10 +29,17 @@ module.exports = {
         new CleanWebpackPlugin(['./build']),
         new HtmlWebpackPlugin({
             template: './index.html',
+            filename: 'a.html',
+            chunks: ['index']
             // hash: true   // ***.js?6d6s8d9
             // minify: {
             //     collapseWhitespace: true   // 去除空白的压缩
             // }
+        }),
+        new HtmlWebpackPlugin({
+            template: './index.html',
+            filename: 'b.html',
+            chunks: ['index', 'a']
         })
     ],  // 插件的配置
     mode: 'development', // 可以更改模式
