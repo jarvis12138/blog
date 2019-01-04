@@ -151,3 +151,27 @@ var htmlWidth = Math.max(document.documentElement.clientWidth, document.body.cli
 // 如果有滚动条，则宽度减去17px
 // IE8及其以下老版本会少3px
 ```
+
+### 函数与继承
+
+```javascript
+function SuperType() {
+    this.name = ['zhangsan', 'lisi'];
+}
+SuperType.prototype = {
+    constructor: SuperType,
+    sayName: function() {
+        alert(this.name);
+    }
+};
+
+SuperType(); // name变量在window上,即window.name
+new SuperType(); // 每个new后的变量单独有name
+SuperType().sayName(); // 报错
+new SuperType().sayName(); // 输出name
+
+function SubType() {}
+SubType.prototype = new SuperType();
+new SubType().sayName(); // 会共用this.name
+```
+
