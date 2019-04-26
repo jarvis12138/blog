@@ -223,133 +223,275 @@ alert(object.getName()()); // "The window";
 // object.getName() 会产生闭包，而之后this指向window
 ```
 
-### getComputedStyle
+### jQuery getStyle
 
-```javascript
-// jQuery JavaScript Library v1.12.4
+```js
+'use strict';
 
-var getStyles, curCSS,
-	rposition = /^(top|right|bottom|left)$/;
+// jQuery JavaScript Library v1.12.4 http://jquery.com/
+function getStyle(elem, name, computed) {
+    var getStyles, curCSS,
+        rposition = /^(top|right|bottom|left)$/;
+    var pnum = (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source;
+    var rnumnonpx = new RegExp("^(" + pnum + ")(?!px)[a-z%]+$", "i");
+    var rmargin = (/^margin/);
 
-if ( window.getComputedStyle ) {
-	getStyles = function( elem ) {
+    if (window.getComputedStyle) {
+        getStyles = function (elem) {
 
-		// Support: IE<=11+, Firefox<=30+ (#15098, #14150)
-		// IE throws on elements created in popups
-		// FF meanwhile throws on frame elements through "defaultView.getComputedStyle"
-		var view = elem.ownerDocument.defaultView;
+            // Support: IE<=11+, Firefox<=30+ (#15098, #14150)
+            // IE throws on elements created in popups
+            // FF meanwhile throws on frame elements through "defaultView.getComputedStyle"
+            var view = elem.ownerDocument.defaultView;
 
-		if ( !view || !view.opener ) {
-			view = window;
-		}
+            if (!view || !view.opener) {
+                view = window;
+            }
 
-		return view.getComputedStyle( elem );
-	};
+            return view.getComputedStyle(elem);
+        };
 
-	curCSS = function( elem, name, computed ) {
-		var width, minWidth, maxWidth, ret,
-			style = elem.style;
+        curCSS = function (elem, name, computed) {
+            var width, minWidth, maxWidth, ret,
+                style = elem.style;
 
-		computed = computed || getStyles( elem );
+            computed = computed || getStyles(elem);
 
-		// getPropertyValue is only needed for .css('filter') in IE9, see #12537
-		ret = computed ? computed.getPropertyValue( name ) || computed[ name ] : undefined;
+            // getPropertyValue is only needed for .css('filter') in IE9, see #12537
+            ret = computed ? computed.getPropertyValue(name) || computed[name] : undefined;
 
-		// Support: Opera 12.1x only
-		// Fall back to style even without computed
-		// computed is undefined for elems on document fragments
-		if ( ( ret === "" || ret === undefined ) && !jQuery.contains( elem.ownerDocument, elem ) ) {
-			ret = jQuery.style( elem, name );
-		}
+            // Support: Opera 12.1x only
+            // Fall back to style even without computed
+            // computed is undefined for elems on document fragments
+            // 如果通过getComputedStyle获取的样式为“”空字符串，并且元素没有在文档中（例如，通过document.createElement(tagName)创建的元素还没有添加到body中）时，通过style方式获取样式，这样在元素的样式时通过内联方式设置的时候，没有添加到文档中，也可以获取到样式值。
+            // if ((ret === "" || ret === undefined) && !jQuery.contains(elem.ownerDocument, elem)) {
+            //     ret = jQuery.style(elem, name);
+            // }
 
-		if ( computed ) {
+            if (computed) {
 
-			// A tribute to the "awesome hack by Dean Edwards"
-			// Chrome < 17 and Safari 5.0 uses "computed value"
-			// instead of "used value" for margin-right
-			// Safari 5.1.7 (at least) returns percentage for a larger set of values,
-			// but width seems to be reliably pixels
-			// this is against the CSSOM draft spec:
-			// http://dev.w3.org/csswg/cssom/#resolved-values
-			if ( !support.pixelMarginRight() && rnumnonpx.test( ret ) && rmargin.test( name ) ) {
+                // A tribute to the "awesome hack by Dean Edwards"
+                // Chrome < 17 and Safari 5.0 uses "computed value"
+                // instead of "used value" for margin-right
+                // Safari 5.1.7 (at least) returns percentage for a larger set of values,
+                // but width seems to be reliably pixels
+                // this is against the CSSOM draft spec:
+                // http://dev.w3.org/csswg/cssom/#resolved-values
+                if (!pixelMarginRight() && rnumnonpx.test(ret) && rmargin.test(name)) {
 
-				// Remember the original values
-				width = style.width;
-				minWidth = style.minWidth;
-				maxWidth = style.maxWidth;
+                    // Remember the original values
+                    width = style.width;
+                    minWidth = style.minWidth;
+                    maxWidth = style.maxWidth;
 
-				// Put in the new values to get a computed value out
-				style.minWidth = style.maxWidth = style.width = ret;
-				ret = computed.width;
+                    // Put in the new values to get a computed value out
+                    style.minWidth = style.maxWidth = style.width = ret;
+                    ret = computed.width;
 
-				// Revert the changed values
-				style.width = width;
-				style.minWidth = minWidth;
-				style.maxWidth = maxWidth;
-			}
-		}
+                    // Revert the changed values
+                    style.width = width;
+                    style.minWidth = minWidth;
+                    style.maxWidth = maxWidth;
+                }
+            }
 
-		// Support: IE
-		// IE returns zIndex value as an integer.
-		return ret === undefined ?
-			ret :
-			ret + "";
-	};
-} else if ( documentElement.currentStyle ) {
-	getStyles = function( elem ) {
-		return elem.currentStyle;
-	};
+            // Support: IE
+            // IE returns zIndex value as an integer.
+            return ret === undefined ?
+                ret :
+                ret + "";
+        };
+    } else if (document.documentElement.currentStyle) {
+        getStyles = function (elem) {
+            return elem.currentStyle;
+        };
 
-	curCSS = function( elem, name, computed ) {
-		var left, rs, rsLeft, ret,
-			style = elem.style;
+        curCSS = function (elem, name, computed) {
+            var left, rs, rsLeft, ret,
+                style = elem.style;
 
-		computed = computed || getStyles( elem );
-		ret = computed ? computed[ name ] : undefined;
+            computed = computed || getStyles(elem);
+            ret = computed ? computed[name] : undefined;
 
-		// Avoid setting ret to empty string here
-		// so we don't default to auto
-		if ( ret == null && style && style[ name ] ) {
-			ret = style[ name ];
-		}
+            // Avoid setting ret to empty string here
+            // so we don't default to auto
+            if (ret == null && style && style[name]) {
+                ret = style[name];
+            }
 
-		// From the awesome hack by Dean Edwards
-		// http://erik.eae.net/archives/2007/07/27/18.54.15/#comment-102291
+            // From the awesome hack by Dean Edwards
+            // http://erik.eae.net/archives/2007/07/27/18.54.15/#comment-102291
 
-		// If we're not dealing with a regular pixel number
-		// but a number that has a weird ending, we need to convert it to pixels
-		// but not position css attributes, as those are
-		// proportional to the parent element instead
-		// and we can't measure the parent instead because it
-		// might trigger a "stacking dolls" problem
-		if ( rnumnonpx.test( ret ) && !rposition.test( name ) ) {
+            // If we're not dealing with a regular pixel number
+            // but a number that has a weird ending, we need to convert it to pixels
+            // but not position css attributes, as those are
+            // proportional to the parent element instead
+            // and we can't measure the parent instead because it
+            // might trigger a "stacking dolls" problem
+            if (rnumnonpx.test(ret) && !rposition.test(name)) {
 
-			// Remember the original values
-			left = style.left;
-			rs = elem.runtimeStyle;
-			rsLeft = rs && rs.left;
+                // Remember the original values
+                left = style.left;
+                rs = elem.runtimeStyle;
+                rsLeft = rs && rs.left;
 
-			// Put in the new values to get a computed value out
-			if ( rsLeft ) {
-				rs.left = elem.currentStyle.left;
-			}
-			style.left = name === "fontSize" ? "1em" : ret;
-			ret = style.pixelLeft + "px";
+                // Put in the new values to get a computed value out
+                if (rsLeft) {
+                    rs.left = elem.currentStyle.left;
+                }
+                style.left = name === "fontSize" ? "1em" : ret;
+                ret = style.pixelLeft + "px";
 
-			// Revert the changed values
-			style.left = left;
-			if ( rsLeft ) {
-				rs.left = rsLeft;
-			}
-		}
+                // Revert the changed values
+                style.left = left;
+                if (rsLeft) {
+                    rs.left = rsLeft;
+                }
+            }
 
-		// Support: IE
-		// IE returns zIndex value as an integer.
-		return ret === undefined ?
-			ret :
-			ret + "" || "auto";
-	};
+            // Support: IE
+            // IE returns zIndex value as an integer.
+            return ret === undefined ?
+                ret :
+                ret + "" || "auto";
+        };
+    }
+
+    return {
+        'getStyles': getStyles,
+        'curCSS': curCSS
+    };
 }
+
+function pixelMarginRight() {
+    var pixelPositionVal, pixelMarginRightVal, boxSizingReliableVal,
+        reliableHiddenOffsetsVal, reliableMarginRightVal, reliableMarginLeftVal,
+        container = document.createElement("div"),
+        div = document.createElement("div");
+    var support = {};
+
+    // Finish early in limited (non-browser) environments
+    if (!div.style) {
+        return;
+    }
+
+    div.style.cssText = "float:left;opacity:.5";
+
+    // Support: IE<9
+    // Make sure that element opacity exists (as opposed to filter)
+    support.opacity = div.style.opacity === "0.5";
+
+    // Verify style float existence
+    // (IE uses styleFloat instead of cssFloat)
+    support.cssFloat = !!div.style.cssFloat;
+
+    div.style.backgroundClip = "content-box";
+    div.cloneNode(true).style.backgroundClip = "";
+    support.clearCloneStyle = div.style.backgroundClip === "content-box";
+
+    container = document.createElement("div");
+    container.style.cssText = "border:0;width:8px;height:0;top:0;left:-9999px;" +
+        "padding:0;margin-top:1px;position:absolute";
+    div.innerHTML = "";
+    container.appendChild(div);
+
+    // Support: Firefox<29, Android 2.3
+    // Vendor-prefix box-sizing
+    support.boxSizing = div.style.boxSizing === "" || div.style.MozBoxSizing === "" ||
+        div.style.WebkitBoxSizing === "";
+
+    function computeStyleTests() {
+        var contents, divStyle,
+            documentElement = document.documentElement;
+
+        // Setup
+        documentElement.appendChild(container);
+
+        div.style.cssText =
+
+            // Support: Android 2.3
+            // Vendor-prefix box-sizing
+            "-webkit-box-sizing:border-box;box-sizing:border-box;" +
+            "position:relative;display:block;" +
+            "margin:auto;border:1px;padding:1px;" +
+            "top:1%;width:50%";
+
+        // Support: IE<9
+        // Assume reasonable values in the absence of getComputedStyle
+        pixelPositionVal = boxSizingReliableVal = reliableMarginLeftVal = false;
+        pixelMarginRightVal = reliableMarginRightVal = true;
+
+        // Check for getComputedStyle so that this code is not run in IE<9.
+        if (window.getComputedStyle) {
+            divStyle = window.getComputedStyle(div);
+            pixelPositionVal = (divStyle || {}).top !== "1%";
+            reliableMarginLeftVal = (divStyle || {}).marginLeft === "2px";
+            boxSizingReliableVal = (divStyle || { width: "4px" }).width === "4px";
+
+            // Support: Android 4.0 - 4.3 only
+            // Some styles come back with percentage values, even though they shouldn't
+            div.style.marginRight = "50%";
+            pixelMarginRightVal = (divStyle || { marginRight: "4px" }).marginRight === "4px";
+
+            // Support: Android 2.3 only
+            // Div with explicit width and no margin-right incorrectly
+            // gets computed margin-right based on width of container (#3333)
+            // WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
+            contents = div.appendChild(document.createElement("div"));
+
+            // Reset CSS: box-sizing; display; margin; border; padding
+            contents.style.cssText = div.style.cssText =
+
+                // Support: Android 2.3
+                // Vendor-prefix box-sizing
+                "-webkit-box-sizing:content-box;-moz-box-sizing:content-box;" +
+                "box-sizing:content-box;display:block;margin:0;border:0;padding:0";
+            contents.style.marginRight = contents.style.width = "0";
+            div.style.width = "1px";
+
+            reliableMarginRightVal =
+                !parseFloat((window.getComputedStyle(contents) || {}).marginRight);
+
+            div.removeChild(contents);
+        }
+
+        // Support: IE6-8
+        // First check that getClientRects works as expected
+        // Check if table cells still have offsetWidth/Height when they are set
+        // to display:none and there are still other visible table cells in a
+        // table row; if so, offsetWidth/Height are not reliable for use when
+        // determining if an element has been hidden directly using
+        // display:none (it is still safe to use offsets if a parent element is
+        // hidden; don safety goggles and see bug #4512 for more information).
+        div.style.display = "none";
+        reliableHiddenOffsetsVal = div.getClientRects().length === 0;
+        if (reliableHiddenOffsetsVal) {
+            div.style.display = "";
+            div.innerHTML = "<table><tr><td></td><td>t</td></tr></table>";
+            div.childNodes[0].style.borderCollapse = "separate";
+            contents = div.getElementsByTagName("td");
+            contents[0].style.cssText = "margin:0;border:0;padding:0;display:none";
+            reliableHiddenOffsetsVal = contents[0].offsetHeight === 0;
+            if (reliableHiddenOffsetsVal) {
+                contents[0].style.display = "";
+                contents[1].style.display = "none";
+                reliableHiddenOffsetsVal = contents[0].offsetHeight === 0;
+            }
+        }
+
+        // Teardown
+        documentElement.removeChild(container);
+    }
+
+    // Support: Android 4.0-4.3
+    if (pixelPositionVal == null) {
+        computeStyleTests();
+    }
+    return pixelMarginRightVal;
+
+}
+
+// getStyle
 ```
 
 ```javascript
