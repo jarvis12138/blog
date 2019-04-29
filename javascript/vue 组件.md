@@ -307,3 +307,147 @@ Vue.use(Modal);
     </Modal>
 ```
 
+MScroll
+
+```js
+
+export default function MScroll(options) {
+    this.el = options.el;
+    this.isGlobalScroll = options.isGlobalScroll || true;
+    this.wrapperHeight; // 滚动盒子高度
+    this.contentHeight; // 可视区高度
+    this.wrapperScrollTop; // 滚动高度
+    this.enablePulldownScroll = false; // 是否开启下拉刷新
+    this.enablePullupScroll = true; // 是否开启上拉加载更多
+    this.pullupScroll = options.pullupScroll; // 上拉加载函数
+    this.isPullupScroll = false; // 是否正在加载更多
+
+    this.init();
+
+}
+
+MScroll.prototype.init = function () {
+    var _this = this;
+
+    _this.throttleScroll = throttle(function () {
+        if (!_this.enablePullupScroll) {
+            // 关闭监听滚动，上拉加载完所有数据
+            _this.el.removeEventListener('scroll');
+            return false;
+        } else {
+            _this.reLayout(); // 刷新视图
+            if (!_this.isPullupScroll && _this.isBottom()) {
+                _this.isPullupScroll = true;
+                _this.pullupScroll();
+            }
+        }
+    }, 200);
+
+    _this.listenerScroll();
+    // _this.reset();
+
+};
+
+MScroll.prototype.reLayout = function () {
+    if (this.isGlobalScroll) {
+        this.wrapperHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+        this.contentHeight = window.innerHeight;
+        this.wrapperScrollTop = Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+    } else {
+        this.wrapperHeight = this.el.children[0].getBoundingClientRect().height;
+        this.contentHeight = this.el.getBoundingClientRect().height;
+        this.wrapperScrollTop = this.el.scrollTop;
+    }
+};
+
+// 是否有滚动条，文档高度大于可视区高度
+MScroll.prototype.enableScroll = function () {
+    if (this.wrapperHeight > this.contentHeight) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+// 是否到达底部，可以加载更多
+MScroll.prototype.isBottom = function () {
+    return this.wrapperHeight - 10 < this.contentHeight + this.wrapperScrollTop;
+};
+
+// coding
+MScroll.prototype.reset = function () {
+    if (this.enablePullupScroll) {
+        this.isPullupScroll = false;
+
+        // 小于可视区时需要不停加载列表数据
+        if (!this.enableScroll()) {
+            this.isPullupScroll = true;
+            this.pullupScroll();
+        }
+    }
+};
+
+// 监听滚动
+MScroll.prototype.listenerScroll = function () {
+    // var _this = this;
+    if (this.isGlobalScroll) {
+        window.addEventListener('scroll', this.throttleScroll);
+    } else {
+        this.el.addEventListener('scroll', this.throttleScroll);
+    }
+};
+
+
+// 移除监听滚动
+MScroll.prototype.removeScroll = function () {
+    // var _this = this;
+    if (this.isGlobalScroll) {
+        window.removeEventListener('scroll', this.throttleScroll);
+    } else {
+        this.el.removeEventListener('scroll', this.throttleScroll);
+    }
+};
+
+
+function throttle(func, wait, options) {
+    var timeout, context, args, result;
+    var previous = 0;
+    if (!options) options = {};
+
+    var later = function () {
+        previous = options.leading === false ? 0 : new Date().getTime();
+        timeout = null;
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+    };
+
+    var throttled = function () {
+        var now = new Date().getTime();
+        if (!previous && options.leading === false) previous = now;
+        var remaining = wait - (now - previous);
+        context = this;
+        args = arguments;
+        if (remaining <= 0 || remaining > wait) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = now;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+        } else if (!timeout && options.trailing !== false) {
+            timeout = setTimeout(later, remaining);
+        }
+        return result;
+    };
+
+    throttled.cancel = function () {
+        clearTimeout(timeout);
+        previous = 0;
+        timeout = context = args = null;
+    };
+
+    return throttled;
+}
+
+```
