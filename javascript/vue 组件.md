@@ -451,3 +451,58 @@ function throttle(func, wait, options) {
 }
 
 ```
+
+上传图片
+
+```html
+<input accept="image/*" multiple @input="uploadImg($event, {name: 1})" type="file">
+
+<script>
+uploadImg(e, obj) {
+  console.log(e.target.files);
+  const _this = this;
+  let fileMaxSize = 1024; // 1M
+  let fileMinSize = 0;
+
+    if (e.target.files.length <= 0) {
+      return false;
+    }
+
+    //   let reader = new FileReader();
+    let params = new FormData();
+    let config = { headers: { "Content-Type": "multipart/form-data" } };
+
+    for (let i = 0; i < e.target.files.length; i++) {
+      let reader = new FileReader();
+      reader.readAsDataURL(e.target.files[i]);
+      reader.onload = function(e) {
+        console.log(e);
+        //   console.log(e.target.result);
+      };
+    }
+
+    //   _this.fn.post("/", params, config).then(res => {
+    // console.log(res);
+    _this.$toast("错误");
+    //   });
+}
+
+</script>
+```
+
+```js
+const dynamicWrite = r => require.ensure([], () => r(require('../components/dynamic/write')), 'dynamicWrite');
+```
+
+```css
+.clear-both:after {
+    content: '';
+    width: 100%;
+    height: 0;
+    display: block;
+    overflow: hidden;
+    clear: both;
+}
+```
+
+
