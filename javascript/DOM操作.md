@@ -57,3 +57,18 @@ scrollHeight 的值等于该元素在不使用滚动条的情况下为了适应�
 
 MDN地址：https://developer.mozilla.org/zh-CN/docs/Web/API/Element/scrollHeight
 ```
+
+### 获取元素距离文档顶部距离
+
+```js
+function getElementTop(element) { //元素距顶部文档的距离
+    var actualTop = element.offsetTop;
+    var current = element.offsetParent;
+    while (current !== null) {
+        actualTop += current.offsetTop;
+        current = current.offsetParent;
+    }
+    return actualTop;
+}
+```
+
