@@ -505,4 +505,30 @@ const dynamicWrite = r => require.ensure([], () => r(require('../components/dyna
 }
 ```
 
+设置title
+
+```js
+    setWechatTitle: function (title) {
+        if (title === undefined || window.document.title === title) {
+            return false;
+        }
+        document.title = title;
+        var mobile = navigator.userAgent.toLowerCase();
+        if (/iphone|ipad|ipod/.test(mobile)) {
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.setAttribute('src', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+            var iframeCallback = function () {
+                setTimeout(function () {
+                    iframe.removeEventListener('load', iframeCallback);
+                    document.body.removeChild(iframe);
+                }, 1);
+            };
+            iframe.addEventListener('load', iframeCallback);
+            document.body.appendChild(iframe);
+        }
+    },
+
+```
+
 
