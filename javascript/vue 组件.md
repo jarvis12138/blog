@@ -578,3 +578,250 @@ textarea 高度自适应
         }
 ```
 
+仿微信 画廊效果
+
+```html
+<template>
+  <div class="dynamic-write">
+    <div class="title">
+      <input placeholder="输入标题" type="text" v-model="message.title">
+    </div>
+    <div class="content">
+      <textarea ref="txt" placeholder="说点什么..." v-model="message.content"></textarea>
+    </div>
+    <div class="list-wrap clear-both">
+      <div
+        @click="showImg(index)"
+        :key="index"
+        v-for="(item, index) in message.imgList"
+        class="img-wrap"
+      >
+        <img :src="item.src">
+      </div>
+      <div class="add">
+        <input accept="image/*" multiple @input="uploadImg($event, {name: 1})" type="file">
+      </div>
+    </div>
+
+    <div class="bottom-wrap clear-both">
+      <div class="left">
+        <a href="#">#添加话题#</a>
+      </div>
+      <div class="right">
+        <span>{{message.content.length}}</span>
+        <button class="button submit">发布</button>
+      </div>
+    </div>
+
+    <!-- 仿微信 画廊效果 -->
+    <!-- Root element of PhotoSwipe. Must have class pswp. -->
+    <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+      <!-- Background of PhotoSwipe. 
+      It's a separate element as animating opacity is faster than rgba().-->
+      <div class="pswp__bg"></div>
+
+      <!-- Slides wrapper with overflow:hidden. -->
+      <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+        Don't modify these 3 pswp__item elements, data is added later on.-->
+        <div class="pswp__container">
+          <div class="pswp__item"></div>
+          <div class="pswp__item"></div>
+          <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+          <div class="pswp__top-bar">
+            <!--  Controls are self-explanatory. Order can be changed. -->
+
+            <div class="pswp__counter"></div>
+
+            <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+            <button class="pswp__button pswp__button--share" title="Share"></button>
+
+            <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+            <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+            <!-- Preloader demo https://codepen.io/dimsemenov/pen/yyBWoR -->
+            <!-- element will get class pswp__preloader--active when preloader is running -->
+            <div class="pswp__preloader">
+              <div class="pswp__preloader__icn">
+                <div class="pswp__preloader__cut">
+                  <div class="pswp__preloader__donut"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+            <div class="pswp__share-tooltip"></div>
+          </div>
+
+          <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+
+          <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+
+          <div class="pswp__caption">
+            <div class="pswp__caption__center"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import PhotoSwiper from "photoswipe";
+import PhotoSwipeUI_Default from "photoswipe/dist/photoswipe-ui-default";
+import "photoswipe/dist/photoswipe.css";
+import "photoswipe/dist/default-skin/default-skin.css";
+
+export default {
+  name: "dynamicWrite",
+  data() {
+    return {
+      message: {
+        title: "",
+        content: "",
+        imgList: [
+          // { title: "zhangsan", src: "ccc", w: 1, h: 1 }
+        ]
+      },
+      gallery: null
+    };
+  },
+  created() {
+    const _this = this;
+  },
+  mounted() {
+    this.flexText(this.$refs.txt, 20);
+  },
+  methods: {
+    uploadImg(e, obj) {
+      const _this = this;
+      let fileMaxSize = 1024 * 6; // 1M
+      let fileMinSize = 0;
+      let files = e.target.files;
+
+      if (files.length <= 0) {
+        return false;
+      }
+
+      //   let reader = new FileReader();
+      let params = new FormData();
+      let config = { headers: { "Content-Type": "multipart/form-data" } };
+
+      for (let i = 0; i < files.length; i++) {
+        let reader = new FileReader();
+        reader.readAsDataURL(files[i]);
+        reader.onload = function(ev) {
+          console.log(_this.message.imgList);
+          // let img = new Image();
+          // img.src = reader.result;
+          // img.onload = function() {
+          let option = {
+            title: files[i].name,
+            src: reader.result,
+            w: this.width,
+            h: this.height
+          };
+          _this.message.imgList.push(option);
+
+          // 仿微信 画廊效果
+          _this.gallery.items.push(option);
+          // };
+        };
+        reader.onerror = function(error) {
+          console.log(error);
+        };
+      }
+
+      //   _this.fn.http("/", params, config).then(res => {
+      // console.log(res);
+      // _this.$toast("错误");
+      //   });
+    },
+    flexText(el, minHeight) {
+      var timer = null;
+      // 由于ie8有溢出堆栈问题，故调整了这里
+      var setStyle = function(el, minHeight) {
+        if (minHeight) {
+          el.style.height = "auto";
+          el.style.height =
+            el.scrollHeight > minHeight
+              ? el.scrollHeight + 20 + "px"
+              : minHeight + 20 + "px";
+        } else {
+          el.style.height = "auto";
+          el.style.height = el.scrollHeight + 20 + "px";
+        }
+      };
+      var delayedResize = function(el) {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        timer = setTimeout(function() {
+          setStyle(el, minHeight);
+        }, 200);
+      };
+      if (el.addEventListener) {
+        el.addEventListener(
+          "input",
+          function() {
+            setStyle(el, minHeight);
+          },
+          false
+        );
+        setStyle(el, minHeight);
+      } else if (el.attachEvent) {
+        el.attachEvent("onpropertychange", function() {
+          setStyle(el, minHeight);
+        });
+        setStyle(el, minHeight);
+      }
+      if (window.VBArray && window.addEventListener) {
+        // IE9
+        el.attachEvent("onkeydown", function() {
+          var key = window.event.keyCode;
+          if (key === 8 || key === 46) delayedResize(el);
+        });
+        el.attachEvent("oncut", function() {
+          delayedResize(el);
+        });
+      }
+    },
+    showImg(index) {
+      // 仿微信 画廊效果
+      let $pswp = document.getElementsByClassName("pswp")[0];
+      let options = {
+        showHideOpacity: true,
+        mainClass: "pswp--minimal--dark",
+        barsSize: { top: 0, bottom: 0 },
+        captionEl: false,
+        fullscreenEl: false,
+        shareEl: false,
+        bgOpacity: 0.85,
+        tapToClose: true,
+        tapToToggleControls: false
+      };
+      options.index = index;
+      this.gallery = new PhotoSwiper(
+        $pswp,
+        PhotoSwipeUI_Default,
+        this.message.imgList,
+        options
+      );
+      this.gallery.init();
+
+      // this.gallery.goTo(index);
+    }
+  }
+};
+</script>
+
+```
