@@ -318,6 +318,10 @@ export default function MScroll(options) {
     this.contentHeight; // 可视区高度
     this.wrapperScrollTop; // 滚动高度
     this.enablePulldownScroll = false; // 是否开启下拉刷新
+    this.pulldownScroll = options.pulldownScroll; // 下拉刷新函数
+    this.isPulldownScroll = false; // 是否正在下拉刷新
+    this.distance = 80; // 下拉距离触发刷新函数
+    this.point = {};
     this.enablePullupScroll = true; // 是否开启上拉加载更多
     this.pullupScroll = options.pullupScroll; // 上拉加载函数
     this.isPullupScroll = false; // 是否正在加载更多
@@ -329,10 +333,14 @@ export default function MScroll(options) {
 MScroll.prototype.init = function () {
     var _this = this;
 
+    // 下拉刷新
+    _this.initPulldownScroll();
+
     _this.throttleScroll = throttle(function () {
         if (!_this.enablePullupScroll) {
             // 关闭监听滚动，上拉加载完所有数据
-            _this.el.removeEventListener('scroll');
+            // _this.el.removeEventListener('scroll');
+            _this.destroy();
             return false;
         } else {
             _this.reLayout(); // 刷新视图
@@ -346,6 +354,64 @@ MScroll.prototype.init = function () {
     _this.listenerScroll();
     // _this.reset();
 
+};
+
+
+MScroll.prototype.initPulldownScroll = function () {
+    var _this = this;
+
+    if (!_this.enablePulldownScroll) return;
+
+    _this.touchstartEvent = function (e) {
+        e.preventDefault();
+        _this.reLayout();
+        if (_this.wrapperScrollTop <= 0) {
+            _this.point.start = _this.getPoint(e);
+        }
+    };
+
+    _this.el.addEventListener('touchstart', _this.touchstartEvent);
+
+    _this.touchmoveEvent = function (e) {
+        e.preventDefault();
+
+        var moveY = _this.getPoint(e).y - _this.point.start.y;
+
+        if (moveY > 0 && !_this.isPulldownScroll) {
+            _this.el.style.transform = 'translateY(' + moveY + 'px)';
+            if (moveY < _this.distance) {
+                _this.moveType = 1;
+            } else if (moveY >= _this.distance) {
+                _this.moveType = 2;
+            }
+        }
+    };
+
+    _this.el.addEventListener('touchmove', _this.touchmoveEvent);
+
+    _this.touchendEvent = function (e) {
+        e.preventDefault();
+        _this.moveType = 1;
+        _this.pulldownScroll();
+    };
+
+    _this.el.addEventListener('touchend', _this.touchendEvent);
+
+};
+
+MScroll.prototype.getPoint = function (e) {
+    return {
+        x: e.touches ? e.touches[0].pageX : e.clientX,
+        y: e.touches ? e.touches[0].pageY : e.clientY
+    };
+};
+
+MScroll.prototype.destroy = function () {
+    this.el.removeEventListener('touchstart', this.touchstartEvent);
+    this.el.removeEventListener('touchmove', this.touchmoveEvent);
+    this.el.removeEventListener('touchend', this.touchendEvent);
+
+    this.removeScroll();
 };
 
 MScroll.prototype.reLayout = function () {
