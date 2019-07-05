@@ -915,6 +915,276 @@ export default {
 };
 ```
 
+scroll 组件
+
+```html
+<template>
+  <div class="i-scroll">
+    <div :style="{'transform': 'translate(0, ' + translate + 'px)'}">
+      <slot name="refresh">
+        <div class="txt" v-if="refreshStatus === 'pull'">下拉刷新</div>
+        <div class="txt" v-else-if="refreshStatus === 'drop'">释放刷新</div>
+        <div class="txt" v-else-if="refreshStatus === 'loading'">正在刷新...</div>
+      </slot>
+      <slot></slot>
+      <slot name="loadmore">
+        <div class="txt" v-if="loadmoreLoading === 'loading'">加载更多...</div>
+      </slot>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    isGlobal: {
+      default: true, // 是否全局监听,监听body滚动等
+      type: Boolean
+    },
+    enableLoadmore: { // 是否开启底部加载
+      default: true,
+      type: Boolean
+    },
+    loadmore: { // 底部加载函数
+      default: () => { },
+      type: Function
+    },
+    loadmoreLoading: { // 底部加载状态 '': 初始化, 'loading': 正在加载
+      default: '',
+      type: String
+    },
+    loadmoreDistance: { // 距离底部距离,默认 10px
+      default: 10,
+      type: Number
+    },
+
+    enableRefresh: { // 是否开启下拉刷新
+      default: false,
+      type: Boolean
+    },
+    refresh: { // 下拉刷新函数
+      default: () => { },
+      type: Function
+    },
+    refreshLoading: { // 加载状态 '': 默认, 'loading': 正在刷新
+      default: '',
+      type: String
+    },
+    refreshDistance: { // 下拉距离,默认 10px
+      default: 10,
+      type: Number
+    }
+  },
+  data () {
+    return {
+      isContainerFilled: false, // 是否填充满可视区域
+      loadmoreEventElement: null, // 监听是否到达底部的元素
+      listenerLoadmore: null, // loadmore 监听滚动
+
+      refreshEventElement: null, // 监听下拉刷新的元素
+      startY: 0, // 开始位置
+      refreshMaxDistance: this.refreshDistance + 20, // 最大下拉距离
+      translate: 0, // 下拉距离
+      refreshStatus: '', // 下拉状态 '': 默认, 'start': 开始触发、点击, 'pull': 下拉, 'drop': 释放, 'loading': 正在刷新
+      msg: 'msg'
+    }
+  },
+  mounted () {
+    this.init()
+  },
+  watch: {
+    enableLoadmore (val) {
+      if (!val) {
+        this.loadmoreEventElement && this.loadmoreEventElement.removeEventListener('scroll', this.listenerLoadmore)
+      } else {
+        this.init()
+      }
+    },
+    loadmoreLoading (val) {
+      if (this.enableLoadmore && this.loadmoreLoading !== 'loading') {
+        if (this.fillContainer()) {
+          this.listenerLoadmore = this.throttle(this.throttleScroll, 200)
+          this.loadmoreEventElement.addEventListener('scroll', this.listenerLoadmore)
+        } else {
+          this.loadmore()
+        }
+      }
+    },
+    refreshLoading (val) {
+      if (val !== 'loading') {
+        this.refreshStatus = ''
+        this.notifyRefreshStatus('')
+        this.translate = 0
+      }
+    }
+  },
+  methods: {
+    init () {
+      if (this.enableLoadmore) {
+        this.loadmoreEventElement = this.getEventElement()
+        if (this.fillContainer()) {
+          this.listenerLoadmore = this.throttle(this.throttleScroll, 200)
+          this.loadmoreEventElement.addEventListener('scroll', this.listenerLoadmore)
+        } else {
+          this.loadmore()
+        }
+      }
+
+      if (this.enableRefresh) {
+        this.refreshEventElement = this.getEventElement()
+        this.bindRefreshEvents()
+      }
+    },
+
+    throttleScroll () {
+      if (this.loadmoreLoading !== 'loading' && this.checkBottomReached()) {
+        this.loadmore()
+      }
+    },
+
+    // 是否滚动到底部
+    checkBottomReached () {
+      if (this.loadmoreEventElement === window) {
+        return ((document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.clientHeight + this.loadmoreDistance >= document.body.scrollHeight)
+      } else {
+        return (this.$el.scrollTop + this.$el.clientHeight + this.loadmoreDistance >= this.$el.scrollHeight)
+      }
+    },
+
+    getEventElement () {
+      if (this.isGlobal) {
+        return window
+      } else {
+        return this.$el
+      }
+    },
+
+    fillContainer () {
+      if (this.loadmoreEventElement === window) {
+        this.isContainerFilled = document.body.scrollHeight > document.documentElement.clientHeight
+      } else {
+        this.isContainerFilled = this.$el.scrollHeight > this.$el.clientHeight
+      }
+
+      return this.isContainerFilled
+    },
+
+    bindRefreshEvents () {
+      this.$el.addEventListener('touchstart', this.startDrag)
+      this.$el.addEventListener('touchmove', this.onDrag)
+      this.$el.addEventListener('touchend', this.endDrag)
+    },
+
+    startDrag (event) {
+      this.startY = event.touches[0].clientY
+      if (this.refreshStatus !== 'loading') {
+        this.refreshStatus = 'start'
+        this.notifyRefreshStatus('start')
+      }
+    },
+
+    onDrag (event) {
+      event.stopPropagation()
+      if (this.getScrollTop(this.refreshEventElement) <= 0 && this.refreshStatus !== 'loading' && this.refreshLoading !== 'loading') {
+        let distance = (event.touches[0].clientY - this.startY) * 0.3
+        if (distance > 0) {
+          // 函数曲线图：http://fooplot.com/?lang=zh_hans#W3sidHlwZSI6MCwiZXEiOiIxMC0xLygwLjAwMSp4KzAuMSkiLCJjb2xvciI6IiMwMDAwMDAifSx7InR5cGUiOjEwMDAsIndpbmRvdyI6WyItMzEyLjAyMDUzMDIyNTMzNTczIiwiNDA5LjYyNDQzNTc4MTAxMTEzIiwiLTIyMy45ODI4NzE5NjQ2NDY1MyIsIjIyMC4xMDYzMzc4ODU0MTMwNyJdfV0-
+          this.translate = this.refreshMaxDistance - 1 / (0.001 * distance + 1 / this.refreshMaxDistance)
+        }
+        if (this.translate >= this.refreshDistance) {
+          this.refreshStatus = 'drop'
+          this.notifyRefreshStatus('drop')
+        } else {
+          this.refreshStatus = 'pull'
+          this.notifyRefreshStatus('pull')
+        }
+      }
+    },
+
+    endDrag (event) {
+      if (this.refreshStatus === 'drop') {
+        this.refreshStatus = 'loading'
+        this.notifyRefreshStatus('loading')
+        this.refresh()
+      } else if (this.refreshStatus === 'loading') {
+
+      } else {
+        this.refreshStatus = ''
+        this.notifyRefreshStatus('')
+      }
+    },
+
+    getScrollTop (element) {
+      if (element === window) {
+        return Math.max(window.pageYOffset || 0, document.documentElement.scrollTop)
+      } else {
+        return element.scrollTop
+      }
+    },
+
+    notifyRefreshStatus (str) {
+      this.$emit('refresh-status-change', str)
+    },
+
+    // 函数节流
+    throttle (func, wait, options) {
+      var timeout, context, args, result
+      var previous = 0
+      if (!options) options = {}
+
+      var later = function () {
+        previous = options.leading === false ? 0 : new Date().getTime()
+        timeout = null
+        result = func.apply(context, args)
+        if (!timeout) context = args = null
+      }
+
+      var throttled = function () {
+        var now = new Date().getTime()
+        if (!previous && options.leading === false) previous = now
+        var remaining = wait - (now - previous)
+        context = this
+        args = arguments
+        if (remaining <= 0 || remaining > wait) {
+          if (timeout) {
+            clearTimeout(timeout)
+            timeout = null
+          }
+          previous = now
+          result = func.apply(context, args)
+          if (!timeout) context = args = null
+        } else if (!timeout && options.trailing !== false) {
+          timeout = setTimeout(later, remaining)
+        }
+        return result
+      }
+
+      throttled.cancel = function () {
+        clearTimeout(timeout)
+        previous = 0
+        timeout = context = args = null
+      }
+
+      return throttled
+    }
+
+  },
+  beforeDestroy () {
+    this.loadmoreEventElement && this.loadmoreEventElement.removeEventListener('scroll', this.listenerLoadmore)
+    this.$el.removeEventListener('touchstart', this.startDrag)
+    this.$el.removeEventListener('touchmove', this.onDrag)
+    this.$el.removeEventListener('touchend', this.endDrag)
+  }
+}
+</script>
+
+<style scoped>
+.i-scroll .txt {
+  font-size: 14px;
+  color: #787878;
+}
+</style>
+```
 
 
 
