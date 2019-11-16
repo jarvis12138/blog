@@ -1186,7 +1186,240 @@ export default {
 </style>
 ```
 
+仿微博评论、话题
 
+```html
+<template>
+  <div class="ry-topic-textarea">
+    <textarea class="textarea" ref="txt" v-model="content"></textarea>
+    <div :class="{'show': showBox}" class="box" ref="box">
+      <div class="search-wrap">
+        <input class="search" placeholder="#输入你想添加的话题" />
+      </div>
+      <div class="common-topic-wrap">
+        <div class="title">常用话题</div>
+        <div>
+          <div @click="chooseTopic" class="list">#3</div>
+          <div class="list">#3</div>
+        </div>
+      </div>
+      <div class="hot-topic-wrap">
+        <div class="title">热门话题</div>
+        <div>
+          <div class="list">#每日打卡#</div>
+          <div class="list">#我要上首页#</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+// 微博话题替换:
+// /\#([^\#|.]+)\#/g
+// 微博@替换:
+// /\@([^\@|.|^ ]+)/g
+
+export default {
+  data () {
+    return {
+      showBox: false,
+      content: '',
+      chooseTopicString: '',
+      rangeData: {}
+    }
+  },
+  mounted () {
+    this.flexText(this.$refs.txt, 20);
+  },
+  watch: {
+    content (newValue, oldValue) {
+      // console.log(oldValue, newValue);
+
+      // 通过比较，查看输入的是否是单个字符：‘#’
+      if (this.compareString(oldValue, newValue)) {
+        this.rangeData = this.getCursorPosition(this.$refs.txt);
+        this.openBox();
+      }
+    }
+  },
+  methods: {
+    openBox () {
+      this.showBox = true;
+    },
+    compareString (firstString, secondString) {
+      if (secondString.length - firstString.length === 1 && (firstString.replace(/\#/g, '') === secondString.replace(/\#/g, ''))) {
+        return true;
+      }
+      return false;
+    },
+    chooseTopic () {
+      this.showBox = false;
+      this.chooseTopicString = '#测试哈#';
+      let text = this.content;
+      this.content = text.substring(0, this.rangeData.start - 1) + this.chooseTopicString + text.substring(this.rangeData.end + 1);
+    },
+    flexText (el, minHeight) {
+      var timer = null;
+      // 由于ie8有溢出堆栈问题，故调整了这里
+      var setStyle = function (el, minHeight) {
+        if (minHeight) {
+          el.style.height = "auto";
+          el.style.height =
+            el.scrollHeight > minHeight
+              ? el.scrollHeight + 20 + "px"
+              : minHeight + 20 + "px";
+        } else {
+          el.style.height = "auto";
+          el.style.height = el.scrollHeight + 20 + "px";
+        }
+      };
+      var delayedResize = function (el) {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        timer = setTimeout(function () {
+          setStyle(el, minHeight);
+        }, 200);
+      };
+      if (el.addEventListener) {
+        el.addEventListener(
+          "input",
+          function () {
+            setStyle(el, minHeight);
+          },
+          false
+        );
+        setStyle(el, minHeight);
+      } else if (el.attachEvent) {
+        el.attachEvent("onpropertychange", function () {
+          setStyle(el, minHeight);
+        });
+        setStyle(el, minHeight);
+      }
+      if (window.VBArray && window.addEventListener) {
+        // IE9
+        el.attachEvent("onkeydown", function () {
+          var key = window.event.keyCode;
+          if (key === 8 || key === 46) delayedResize(el);
+        });
+        el.attachEvent("oncut", function () {
+          delayedResize(el);
+        });
+      }
+    },
+
+    // 参考：司徒正美 [获取 Textarea 的光标位置](https://www.cnblogs.com/rubylouvre/articles/1885845.html)
+    // 获取 Textarea 的光标位置
+    getCursorPosition (textarea) {
+      var rangeData = { text: "", start: 0, end: 0 };
+      textarea.focus();
+      if (textarea.setSelectionRange) { // w3c
+        rangeData.start = textarea.selectionStart;
+        rangeData.end = textarea.selectionEnd;
+        rangeData.text = (rangeData.start != rangeData.end) ? textarea.value.substring(rangeData.start, rangeData.end) : "";
+      } else if (document.selection) { // IE
+        var i,
+          oS = document.selection.createRange(),
+          oR = document.body.createTextRange();
+        oR.moveToElementText(textarea);
+        rangeData.text = oS.text;
+        rangeData.bookmark = oS.getBookmark();
+        for (i = 0; oR.compareEndPoints('StartToStart', oS) < 0 && oS.moveStart("character", -1) !== 0; i++) {
+          if (textarea.value.charAt(i) == '\n') {
+            i++;
+          }
+        }
+        rangeData.start = i;
+        rangeData.end = rangeData.text.length + rangeData.start;
+      }
+      return rangeData;
+    },
+    setCursorPosition (textarea, rangeData) {
+      if (!rangeData) {
+        return;
+      }
+      if (textarea.setSelectionRange) { // w3c
+        textarea.focus();
+        textarea.setSelectionRange(rangeData.start, rangeData.end);
+      } else if (textarea.createTextRange) { // IE
+        var oR = textarea.createTextRange();
+        if (textarea.value.length === rangeData.start) {
+          oR.collapse(false);
+          oR.select();
+        } else {
+          oR.moveToBookmark(rangeData.bookmark);
+          oR.select();
+        }
+      }
+    },
+
+  },
+}
+</script>
+
+<style scoped>
+.ry-topic-textarea {
+  position: relative;
+}
+.ry-topic-textarea .textarea {
+  width: 100%;
+  outline: none;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  font-size: 16px;
+  border: 1px solid #cccccc;
+}
+.ry-topic-textarea .box {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: white;
+  transition: all 0.4s ease-in-out;
+}
+.ry-topic-textarea .box.show {
+  left: 0;
+}
+.ry-topic-textarea .box .search-wrap {
+  margin: 20px 20px;
+  padding: 0 0 20px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #f5f5f5;
+}
+.ry-topic-textarea .box .search-wrap .search {
+  outline: none;
+  border: none;
+  font-size: 16px;
+  padding: 4px 0;
+}
+.ry-topic-textarea .box .common-topic-wrap {
+  margin: 20px 20px;
+}
+.ry-topic-textarea .box .hot-topic-wrap {
+  margin: 20px 20px;
+}
+.ry-topic-textarea .box .common-topic-wrap .title,
+.ry-topic-textarea .box .hot-topic-wrap .title {
+  font-size: 16px;
+  color: #888888;
+}
+.ry-topic-textarea .box .common-topic-wrap .list,
+.ry-topic-textarea .box .hot-topic-wrap .list {
+  font-size: 16px;
+  color: #ff7b5c;
+  display: block;
+  margin: 20px 0;
+}
+</style>
+```
 
 
 
