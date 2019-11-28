@@ -1,0 +1,24 @@
+{
+  "name": "webpack",
+  "version": "1.0.0",
+  "description": "webpack优化-打包优化",
+  "main": "index.js",
+  "scripts": {
+    "build:dll": "webpack --config build/webpack.dll.conf.js",
+    "build": "webpack --config build/build.js",
+    "dev": "webpack-dev-server --config build/webpack.dev.conf.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "html-webpack-plugin": "^2.30.1",
+    "webpack": "^3.12.0",
+    "webpack-bundle-analyzer": "^2.9.0",
+    "webpack-dev-server": "^2.9.1"
+  },
+  "dependencies": {
+    "axios": "^0.19.0",
+    "jquery": "^3.4.1",
+    "vue": "^2.6.8"
+  }
+}
